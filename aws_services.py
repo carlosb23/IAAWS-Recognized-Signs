@@ -1,7 +1,7 @@
 import boto3
 import os
 
-# 1. --- Creación del Cliente de AWS ---
+# Creación del Cliente de AWS
 
 # Leemos los nombres de variable personalizados de nuestro .env
 REGION = os.getenv('REGION')
@@ -13,8 +13,6 @@ if not REGION or not ACCESS_KEY or not SECRET_KEY:
     raise ValueError("Error: Faltan variables de AWS (REGION, ACCESS_KEY_ID, ACCESS_SECRET_KEY) en .env")
 
 try:
-    # --- ¡CAMBIO! ---
-    # Ya no necesitamos 'translate_client'
     rekognition_client = boto3.client(
         'rekognition',
         region_name=REGION,
@@ -27,7 +25,7 @@ except Exception as e:
     raise
 
 
-# 2. --- Funciones de Servicio (Llamadas a la API) ---
+# Funciones de Servicio (Llamadas a la API)
 
 def _get_text_from_rekognition(bucket, s3_key):
     """
@@ -63,20 +61,11 @@ def _get_text_from_rekognition(bucket, s3_key):
         raise ValueError(f"Error al analizar la imagen en Rekognition: {str(e)}")
 
 
-# 3. --- Función Principal (La que usa 'application.py') ---
-#
-# --- ¡CAMBIO! ---
-# Esta función ahora es mucho más simple.
-# Ya no necesita el parámetro 'target_language'
-#
+# Función Principal
 def get_text_from_s3_image(bucket, s3_key):
-    """
-    Orquesta el flujo de análisis de AWS.
-    1. Lee texto de la imagen (Rekognition)
-    """
 
-    # Paso 1: Obtener texto de la imagen usando Rekognition
+    # Obtener texto de la imagen usando Rekognition
     original_text = _get_text_from_rekognition(bucket, s3_key)
 
-    # Paso 2: Devolver el texto directamente
+    # Devolver el texto directamente
     return original_text

@@ -4,15 +4,16 @@ from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 import boto3
 from botocore.exceptions import NoCredentialsError
+import threading
+import gradio_app
 
-# 1. --- Configuración Inicial ---
+# Configuración Inicial
 
 # Cargar variables de entorno (claves, buckets) desde .env
 load_dotenv()
 
-# --- IMPORTANTE: Ahora importamos nuestros archivos ---
-import aws_services  # Archivo 2
-import get_location  # Archivo 3
+import aws_services
+import get_location
 
 app = Flask(__name__)
 
@@ -20,13 +21,13 @@ app = Flask(__name__)
 AWS_ACCESS_KEY = os.getenv('ACCESS_KEY_ID')
 AWS_SECRET_KEY = os.getenv('ACCESS_SECRET_KEY')
 AWS_REGION = os.getenv('REGION')
-BUCKET_SOURCE = os.getenv('BUCKET_SOURCE')  # El bucket para subir las fotos
+BUCKET_SOURCE = os.getenv('BUCKET_SOURCE')
 
 # Validar que las variables se han cargado
 if not all([AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_REGION, BUCKET_SOURCE]):
     raise ValueError("Error: Faltan variables de entorno de AWS (KEY, SECRET, REGION o BUCKET)")
 
-# 2. --- Creación del cliente de S3 ---
+# Creación del cliente de S3
 s3_client = boto3.client(
     's3',
     aws_access_key_id=AWS_ACCESS_KEY,
@@ -49,7 +50,7 @@ def upload_file_to_s3(file_obj, bucket_name, object_name):
     return True
 
 
-# 3. --- Definición del Endpoint de la API ---
+# Definición del Endpoint de la API
 
 @app.route('/analyze-sign/', methods=['POST'])
 def analyze_sign_endpoint():
@@ -57,7 +58,7 @@ def analyze_sign_endpoint():
     Este endpoint recibe una imagen y devuelve la localización.
     """
 
-    # --- A. Validar la Petición ---
+    # Validar la Petición
     if 'image' not in request.files:
         return jsonify({"error": "Petición inválida: falta el archivo 'image'"}), 400
 
@@ -66,23 +67,18 @@ def analyze_sign_endpoint():
     if file.filename == '':
         return jsonify({"error": "Petición inválida: no se ha seleccionado ningún archivo"}), 400
 
-    # --- ¡CAMBIO! ---
-    # Ya no necesitamos 'target_language'
-    # ------------------
 
-    # --- B. Lógica de Almacenamiento (Requisito) ---
+    # Lógica de Almacenamiento
     unique_filename = f"uploads/{uuid.uuid4()}_{file.filename}"
 
     if not upload_file_to_s3(file, BUCKET_SOURCE, unique_filename):
         return jsonify({"error": "Fallo al subir la imagen a S3"}), 500
 
-    # --- C. Llamada al Archivo 2 (Servicios AWS) (Requisito) ---
+    # Llamada al Archivo 2 (Servicios AWS)
 
     print(f"Iniciando análisis de {unique_filename}...")
     try:
-        # --- ¡CAMBIO! ---
-        # 1. Llamamos a la nueva función
-        # 2. Ya no devuelve un diccionario, solo el texto
+        # Llamamos a la nueva función
         original_text = aws_services.get_text_from_s3_image(
             bucket=BUCKET_SOURCE,
             s3_key=unique_filename
@@ -93,7 +89,7 @@ def analyze_sign_endpoint():
         print(f"Error en aws_services: {e}")
         return jsonify({"error": f"Error en los servicios de IA: {str(e)}"}), 500
 
-    # --- D. Llamada al Archivo 3 (Funcionalidad Extra) (Requisito) ---
+    # Llamada al Archivo 3 (Funcionalidad Extra)
 
     location_info = "No se buscó ubicación (no se detectó texto)."
 
@@ -109,9 +105,6 @@ def analyze_sign_endpoint():
             print(f"Error en get_location (Gemini): {e}")
             location_info = "Error al contactar el servicio de localización (Gemini)."
 
-    # --- E. Devolver Respuesta Final ---
-
-    # --- ¡CAMBIO! ---
     # Simplificamos la respuesta final
     final_response = {
         "image_source": f"s3://{BUCKET_SOURCE}/{unique_filename}",
@@ -122,8 +115,19 @@ def analyze_sign_endpoint():
     return jsonify(final_response), 200
 
 
-# 4. --- Ejecución del Servidor ---
+def run_flask():
+    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
+
+# 4. Ejecución del Servidor + app
 
 if __name__ == '__main__':
-    app.debug = True
-    app.run()
+
+    print("Iniciando app")
+
+    flask_thread = threading.Thread(target=run_flask)
+    flask_thread.daemon = True
+    flask_thread.start()
+
+    print("Iniciando la interfaz de gradio")
+
+    gradio_app.demo.launch(inbrowser=True)
