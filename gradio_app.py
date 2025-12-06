@@ -6,10 +6,10 @@ import os
 
 from dotenv import load_dotenv
 
-# Cargar variables para saber dónde está tu servidor Flask
+# Cargamos las variables para saber dónde está el servidor
 load_dotenv()
 
-# Si tu Flask corre en otro puerto, cámbialo aquí
+# Añadimos la url del servidor flask
 FLASK_URL = "http://127.0.0.1:5000/analyze-sign"
 
 
@@ -34,7 +34,7 @@ def process_image(image_path):
             texto_detectado = data.get('detected_text', '')
             ubicacion_info = data.get('location_info', '')
 
-            # En esta parte he generado un mapa interactivo dentro de la web con ayuda IA
+            # En esta parte he generado un mapa interactivo dentro de la web con ayuda de geminis
             # Sabia que se podia usar un iframe para meter el mapa pero no que gradio admitira HTML
             mapa_html = ""
             if texto_detectado and "No se ha detectado" not in texto_detectado:
@@ -74,8 +74,8 @@ def process_image(image_path):
 # Configuración de la Interfaz de Gradio
 
 # Definimos el diseño visual
-with gr.Blocks(title="Detector de Ubicación de Calles con IA", theme="dark") as demo:
-    gr.Markdown("# ¿Web para buscar calles por reconocimiento de señales?")
+with gr.Blocks(title="Detector de Ubicación de Calles con IA") as demo:
+    gr.Markdown("# Web para buscar calles por reconocimiento de señales")
     gr.Markdown("Sube una foto de una señal de una calle y la IA te dirá dónde se encuentra ese lugar.")
 
     with gr.Row():

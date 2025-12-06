@@ -93,11 +93,10 @@ def analyze_sign_endpoint():
 
     location_info = "No se buscó ubicación (no se detectó texto)."
 
-    # Solo buscamos la ubicación si Rekognition encontró texto
+    # Esto de aqui busca la ubicación si Rekognition encontró texto
     if original_text and "No se ha detectado texto" not in original_text:
         print(f"Buscando ubicación para: {original_text}")
         try:
-            # Esta llamada a Gemini sigue igual y es perfecta
             location_info = get_location.find_location_info(original_text)
 
         except Exception as e:
@@ -118,7 +117,7 @@ def analyze_sign_endpoint():
 def run_flask():
     app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
 
-# 4. Ejecución del Servidor + app
+# Ejecución del Servidor + app
 
 if __name__ == '__main__':
 

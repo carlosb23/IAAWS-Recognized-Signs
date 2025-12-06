@@ -4,7 +4,6 @@ import google.generativeai as genai
 # Configuración del Cliente de Gemini
 
 try:
-    # 'application.py' ya cargó .env, así que os.getenv funciona
     GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
     if not GEMINI_API_KEY:
@@ -13,7 +12,7 @@ try:
     # Configura la API de Google
     genai.configure(api_key=GEMINI_API_KEY)
 
-    # Eligimos el modelo de IA que vamos a usar
+    # Eligimos el modelo de IA que vamos a usar, no uso el pro porque tarda mucho en pensar mejor el normal
     model = genai.GenerativeModel('gemini-2.5-flash')
 
 #
