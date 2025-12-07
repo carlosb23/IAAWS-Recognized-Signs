@@ -55,8 +55,8 @@ def process_image(image_path):
                             src="https://maps.google.com/maps?q={query}&t=&z=15&ie=UTF8&iwloc=&output=embed">
                         </iframe>
                     </div>
-                    <div style="margin-top: 15px; padding: 10px; background-color: #f0f8ff; border-radius: 5px;">
-                        <strong>Geminis Ubicación: </strong> {ubicacion_info}
+                    <div style="margin-top: 15px; padding: 10px; background-color: #f0f8ff; border-radius: 5px; color: #000000">
+                        <strong style="color: #000000">Geminis Ubicación: </strong> {ubicacion_info}
                     </div>
                     """
             else:
